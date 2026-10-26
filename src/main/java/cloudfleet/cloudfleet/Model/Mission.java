@@ -23,7 +23,19 @@ public class Mission {
     private LocalDateTime ActualDateDebut;
     private String DepartAdresse;
     private String destinationAdresse;
+
+    @Enumerated(EnumType.STRING)
     private MissionStatus status;
+
+    @ManyToOne
+    private Vehicule vehicule ;
+
+    @ManyToOne
+    private Driver driver;
+
+
+    @ManyToOne
+    private Dispatcher dispatcher;
 
 
 

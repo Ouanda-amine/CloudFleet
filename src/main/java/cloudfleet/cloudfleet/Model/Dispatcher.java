@@ -1,7 +1,10 @@
 package cloudfleet.cloudfleet.Model;
 
 import jakarta.persistence.Entity;
-import org.springframework.boot.webmvc.autoconfigure.WebMvcProperties;
+import jakarta.persistence.OneToMany;
+
+import java.util.List;
+
 @Entity
 public class Dispatcher extends User {
 
@@ -18,6 +21,9 @@ public class Dispatcher extends User {
         this.phoneNumber= phoneNumber;
         this.department = department;
     }
+
+    @OneToMany
+    private List<Mission> missions;
 
 
 }
