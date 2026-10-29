@@ -15,6 +15,8 @@ public class Vehicule {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(nullable = false)
     private Long id;
+
+    @Column(unique = true, nullable = false)
     private String matricule;
 
     @Enumerated(EnumType.STRING)
@@ -28,6 +30,6 @@ public class Vehicule {
 
 
 
-    @OneToMany
+    @OneToMany(mappedBy = "vehicule")
     private List<Mission> missions;
 }

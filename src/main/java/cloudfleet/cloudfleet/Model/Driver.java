@@ -33,7 +33,7 @@ public class Driver extends User{
         this.status = status;
     }
 
-    @OneToMany
+    @OneToMany(mappedBy = "driver")
     private List<Mission> missions;
 
 
