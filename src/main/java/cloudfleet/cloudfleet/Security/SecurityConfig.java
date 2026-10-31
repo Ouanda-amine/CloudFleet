@@ -67,7 +67,7 @@ public class SecurityConfig {
                         // Suivi temps réel (WebSocket)
                         .requestMatchers("/ws/**").authenticated()
 
-                        // Tout le reste est refusé
+
                         .anyRequest().denyAll()
                 )
                 .httpBasic(Customizer.withDefaults());
