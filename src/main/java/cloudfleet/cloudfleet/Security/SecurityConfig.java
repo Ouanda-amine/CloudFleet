@@ -66,6 +66,7 @@ public class SecurityConfig {
 
                         // Suivi temps réel (WebSocket)
                         .requestMatchers("/ws/**").authenticated()
+                        .requestMatchers("/error").permitAll()
 
 
                         .anyRequest().denyAll()
