@@ -9,10 +9,11 @@ import cloudfleet.cloudfleet.Model.DriverStatus;
 import cloudfleet.cloudfleet.Repository.DriverRepository;
 import cloudfleet.cloudfleet.Repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
-import jakarta.transaction.Transactional;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -40,10 +41,12 @@ public class DriverService {
         return driverMapper.ToDTO(driverRepository.save(driver));
     }
 
+    @Transactional(readOnly = true)
     public List<DriverDTO> FindAllDrivers(){
         return driverMapper.ToDTOList(driverRepository.findAll());
     }
 
+    @Transactional(readOnly = true)
     public DriverDTO FindDriverById(Long id){
         return driverMapper.ToDTO(getDriver(id));
 
