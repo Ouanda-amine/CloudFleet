@@ -2,10 +2,12 @@ package cloudfleet.cloudfleet.Mapper;
 
 import cloudfleet.cloudfleet.DTO.CreateDispatcherDTO;
 import cloudfleet.cloudfleet.DTO.DispatcherDTO;
+import cloudfleet.cloudfleet.DTO.UpdateDispatcherDTO;
 import cloudfleet.cloudfleet.Model.Dispatcher;
 import cloudfleet.cloudfleet.Model.Mission;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.MappingTarget;
 
 import java.util.List;
 
@@ -13,15 +15,25 @@ import java.util.List;
 public interface DispatcherMapper {
 
     @Mapping(target = "missionIds", source = "missions")
-    DispatcherDTO toDto(Dispatcher dispatcher);
+    DispatcherDTO ToDTO(Dispatcher dispatcher);
 
-    List<DispatcherDTO> toDtoList(List<Dispatcher> dispatchers);
+    List<DispatcherDTO> ToDTOList(List<Dispatcher> dispatchers);
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "role", ignore = true)
     @Mapping(target = "enabled", ignore = true)
     @Mapping(target = "missions", ignore = true)
-    Dispatcher toEntity(CreateDispatcherDTO dto);
+    @Mapping(target = "authorities", ignore = true)
+    Dispatcher ToEntity(CreateDispatcherDTO dto);
+
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "email", ignore = true)
+    @Mapping(target = "password", ignore = true)
+    @Mapping(target = "role", ignore = true)
+    @Mapping(target = "enabled", ignore = true)
+    @Mapping(target = "missions", ignore = true)
+    @Mapping(target = "authorities", ignore = true)
+    void updateEntity(UpdateDispatcherDTO dto, @MappingTarget Dispatcher dispatcher);
 
     default Long missionToId(Mission mission) {
         return mission == null ? null : mission.getId();
