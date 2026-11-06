@@ -58,6 +58,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/test/**").authenticated()
 
                         // Comptes : gérés par l'admin
+                        .requestMatchers(HttpMethod.GET, "/api/dispatchers/*").hasAnyRole("ADMIN", "DISPATCHER")
                         .requestMatchers("/api/dispatchers/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.GET, "/api/drivers/**").hasAnyRole("ADMIN", "DISPATCHER", "DRIVER")
                         .requestMatchers("/api/drivers/**").hasRole("ADMIN")

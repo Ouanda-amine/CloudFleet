@@ -6,6 +6,6 @@ public record UpdateDispatcherDTO(
         @NotBlank String firstName,
         @NotBlank String lastName,
         @NotBlank String phoneNumber,
-        @NotBlank String departement
+        @NotBlank String department
 ) {
 }
