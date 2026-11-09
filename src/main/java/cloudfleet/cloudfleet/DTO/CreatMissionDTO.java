@@ -5,7 +5,7 @@ import jakarta.validation.constraints.NotNull;
 
 import java.time.LocalDateTime;
 
-public record CreatMissionDto(
+public record CreatMissionDTO(
 
         @NotNull LocalDateTime dateDebut,
         @NotNull LocalDateTime dateFin,

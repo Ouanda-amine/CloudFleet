@@ -27,14 +27,14 @@ public class Mission {
     @Enumerated(EnumType.STRING)
     private MissionStatus status;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     private Vehicule vehicule ;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     private Driver driver;
 
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     private Dispatcher dispatcher;
 
 
