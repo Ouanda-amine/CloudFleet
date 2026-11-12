@@ -3,10 +3,7 @@ package cloudfleet.cloudfleet.Services;
 import cloudfleet.cloudfleet.DTO.CreatMissionDTO;
 import cloudfleet.cloudfleet.DTO.MissionDTO;
 import cloudfleet.cloudfleet.Mapper.MissionMapper;
-import cloudfleet.cloudfleet.Model.Driver;
-import cloudfleet.cloudfleet.Model.Mission;
-import cloudfleet.cloudfleet.Model.MissionStatus;
-import cloudfleet.cloudfleet.Model.Vehicule;
+import cloudfleet.cloudfleet.Model.*;
 import cloudfleet.cloudfleet.Repository.DriverRepository;
 import cloudfleet.cloudfleet.Repository.MissionRepository;
 import cloudfleet.cloudfleet.Repository.VehiculeRepository;
@@ -15,11 +12,15 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 public class MissionService {
+
+    private static final List<MissionStatus> ACTIVE =
+            List.of(MissionStatus.PLANNED, MissionStatus.IN_PROGRESS);
 
     private final MissionRepository missionRepository;
     private final MissionMapper missionMapper;
@@ -28,12 +29,19 @@ public class MissionService {
 
     @Transactional
     public MissionDTO createMission(CreatMissionDTO dto) {
-        Mission mission = missionMapper.toEntity(dto);
-        mission.setVehicule(getVehicule(dto.vehiculeId()));
-        mission.setDriver(getDriver(dto.driverId()));
-        mission.setStatus(MissionStatus.PLANNED);
+       if(!dto.dateFin().isAfter(dto.dateDebut())){
+           throw  new IllegalStateException("date fin doit etre apres la date debut");
+       }
 
-        return missionMapper.toDto(missionRepository.save(mission));
+       Vehicule vehicule = getVehicule(dto.vehiculeId());
+       Driver driver = getDriver(dto.driverId());
+
+       Mission mission = missionMapper.toEntity(dto);
+       mission.setVehicule(vehicule);
+       mission.setDriver(driver);
+       mission.setStatus(MissionStatus.PLANNED);
+
+       return missionMapper.toDto(missionRepository.save(mission));
     }
 
     @Transactional(readOnly = true)
@@ -64,6 +72,21 @@ public class MissionService {
     @Transactional
     public void deleteMission(Long id) {
         missionRepository.delete(getMission(id));
+    }
+
+    private void checkAvailability(Vehicule v, Driver d, LocalDateTime debut, LocalDateTime fin) {
+        if (v.getStatus() == VehicleStatus.IN_MAINTENANCE) { // adaptez à votre enum
+            throw new IllegalStateException("Ce véhicule n'est pas disponible");
+        }
+        if (!d.isEnabled()) {
+            throw new IllegalStateException("Ce chauffeur est désactivé");
+        }
+        if (missionRepository.existsVehiculeOverlap(v.getId(), ACTIVE, debut, fin)) {
+            throw new IllegalStateException("Ce véhicule a déjà une mission sur cette période");
+        }
+        if (missionRepository.existsDriverOverlap(d.getId(), ACTIVE, debut, fin)) {
+            throw new IllegalStateException("Ce chauffeur a déjà une mission sur cette période");
+        }
     }
 
     private Mission getMission(Long id) {
