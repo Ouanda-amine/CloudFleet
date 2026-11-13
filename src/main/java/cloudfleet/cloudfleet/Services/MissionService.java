@@ -60,8 +60,11 @@ public class MissionService {
     }
 
     @Transactional(readOnly = true)
-    public MissionDTO getMissionById(Long id) {
-        return missionMapper.toDto(getMission(id));
+    public MissionDTO getMissionById(Long id , User currentuser) {
+        Mission mission = getMission(id);
+        CheckAcces(mission,currentuser);
+        return missionMapper.toDto(mission);
+
     }
 
     @Transactional
@@ -79,7 +82,11 @@ public class MissionService {
 
     @Transactional
     public void deleteMission(Long id) {
-        missionRepository.delete(getMission(id));
+        Mission mission = getMission(id);
+        if(mission.getStatus()==MissionStatus.IN_PROGRESS){
+            throw new IllegalStateException("Cannot delete a mission that is in progress");
+        }
+        missionRepository.delete(mission);
     }
 
     private void checkAvailability(Vehicule v, Driver d, LocalDateTime debut, LocalDateTime fin) {
