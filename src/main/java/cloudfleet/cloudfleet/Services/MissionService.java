@@ -4,6 +4,7 @@ import cloudfleet.cloudfleet.DTO.CreatMissionDTO;
 import cloudfleet.cloudfleet.DTO.MissionDTO;
 import cloudfleet.cloudfleet.Mapper.MissionMapper;
 import cloudfleet.cloudfleet.Model.*;
+import cloudfleet.cloudfleet.Repository.DispatcherRepository;
 import cloudfleet.cloudfleet.Repository.DriverRepository;
 import cloudfleet.cloudfleet.Repository.MissionRepository;
 import cloudfleet.cloudfleet.Repository.VehiculeRepository;
@@ -26,20 +27,27 @@ public class MissionService {
     private final MissionMapper missionMapper;
     private final VehiculeRepository vehiculeRepository;
     private final DriverRepository driverRepository;
+    private final DispatcherRepository dispatcherRepository;
 
     @Transactional
-    public MissionDTO createMission(CreatMissionDTO dto) {
+    public MissionDTO createMission(CreatMissionDTO dto , User currentuser) {
        if(!dto.dateFin().isAfter(dto.dateDebut())){
            throw  new IllegalStateException("date fin doit etre apres la date debut");
        }
 
        Vehicule vehicule = getVehicule(dto.vehiculeId());
        Driver driver = getDriver(dto.driverId());
+       checkAvailability(vehicule,driver,dto.dateDebut(),dto.dateFin());
 
        Mission mission = missionMapper.toEntity(dto);
        mission.setVehicule(vehicule);
        mission.setDriver(driver);
        mission.setStatus(MissionStatus.PLANNED);
+       if(currentuser instanceof Dispatcher){
+           mission.setDispatcher(dispatcherRepository.getReferenceById(currentuser.getId()));
+       }
+
+
 
        return missionMapper.toDto(missionRepository.save(mission));
     }
@@ -86,6 +94,12 @@ public class MissionService {
         }
         if (missionRepository.existsDriverOverlap(d.getId(), ACTIVE, debut, fin)) {
             throw new IllegalStateException("Ce chauffeur a déjà une mission sur cette période");
+        }
+    }
+
+    private void CheckAcces(Mission mission , User user){
+        if(user instanceof Driver && !mission.getDriver().getId().equals(user.getId())){
+            throw new IllegalStateException("Vous n'avez pas accès à cette mission");
         }
     }
 
