@@ -10,6 +10,7 @@ import cloudfleet.cloudfleet.Repository.MissionRepository;
 import cloudfleet.cloudfleet.Repository.VehiculeRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -68,6 +69,44 @@ public class MissionService {
     }
 
     @Transactional
+    public MissionDTO startMission(Long id , User currentuser){
+        Mission mission = getMission(id);
+        CheckAcces(mission,currentuser);
+        requireStatus(mission,MissionStatus.PLANNED,"démarrée");
+
+        if(mission.getVehicule().getStatus() != VehicleStatus.AVAILABLE){
+            throw new IllegalStateException("Le véhicule n'est pas disponible pour démarrer la mission");
+        }
+        mission.setStatus(MissionStatus.IN_PROGRESS);
+        mission.setDateDebut(LocalDateTime.now());
+        mission.getVehicule().setStatus(VehicleStatus.UNAVAILABLE);
+        mission.getDriver().setStatus(DriverStatus.ON_DELIVERY);
+        return missionMapper.toDto(mission);
+    }
+
+    @Transactional
+    public MissionDTO completeMission (Long id , User currentuser){
+
+        Mission mission = getMission(id);
+        CheckAcces(mission,currentuser);
+        requireStatus(mission , MissionStatus.IN_PROGRESS , "terminée");
+
+        mission.setDateFin(LocalDateTime.now());
+        mission.setStatus(MissionStatus.COMPLETED);
+        mission.getVehicule().setStatus(VehicleStatus.AVAILABLE);
+        mission.getDriver().setStatus(DriverStatus.AVAILABLE);
+        return missionMapper.toDto(mission);
+    }
+
+    public MissionDTO cancelMission(Long id  ){
+        Mission mission = getMission(id);
+        requireStatus(mission , MissionStatus.PLANNED , "annulée");
+
+        mission.setStatus(MissionStatus.CANCELLED);
+        return missionMapper.toDto(mission);
+    }
+
+    @Transactional
     public MissionDTO updateMission(Long id, CreatMissionDTO dto) {
         Mission mission = getMission(id);
         mission.setDateDebut(dto.dateDebut());
@@ -106,7 +145,13 @@ public class MissionService {
 
     private void CheckAcces(Mission mission , User user){
         if(user instanceof Driver && !mission.getDriver().getId().equals(user.getId())){
-            throw new IllegalStateException("Vous n'avez pas accès à cette mission");
+            throw new AccessDeniedException("Vous n'avez pas accès à cette mission");
+        }
+    }
+    private void requireStatus(Mission mission, MissionStatus expected, String action) {
+        if (mission.getStatus() != expected) {
+            throw new IllegalStateException("Cette mission ne peut pas être " + action
+                    + " (statut actuel : " + mission.getStatus() + ")");
         }
     }
 
