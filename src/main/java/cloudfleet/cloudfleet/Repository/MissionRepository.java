@@ -17,11 +17,13 @@ public interface MissionRepository extends JpaRepository<Mission, Long> {
     @Query("""
         select count(m) > 0 from Mission m
         where m.vehicule.id = :vehiculeId
+          and m.id <> :excludeId
           and m.status in :statuses
           and m.dateDebut < :fin
           and m.dateFin > :debut
         """)
     boolean existsVehiculeOverlap(@Param("vehiculeId") Long vehiculeId,
+                                  @Param("excludeId") Long excludeId,
                                   @Param("statuses") Collection<MissionStatus> statuses,
                                   @Param("debut") LocalDateTime debut,
                                   @Param("fin") LocalDateTime fin);
@@ -29,11 +31,13 @@ public interface MissionRepository extends JpaRepository<Mission, Long> {
     @Query("""
         select count(m) > 0 from Mission m
         where m.driver.id = :driverId
+            and m.id <> :excludeId
           and m.status in :statuses
           and m.dateDebut < :fin
           and m.dateFin > :debut
         """)
     boolean existsDriverOverlap(@Param("driverId") Long driverId,
+                                @Param("excludeId") Long excludeId,
                                 @Param("statuses") Collection<MissionStatus> statuses,
                                 @Param("debut") LocalDateTime debut,
                                 @Param("fin") LocalDateTime fin);

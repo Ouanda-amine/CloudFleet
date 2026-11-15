@@ -2,6 +2,7 @@ package cloudfleet.cloudfleet.Services;
 
 import cloudfleet.cloudfleet.DTO.CreatMissionDTO;
 import cloudfleet.cloudfleet.DTO.MissionDTO;
+import cloudfleet.cloudfleet.DTO.UpdateMissionDTO;
 import cloudfleet.cloudfleet.Mapper.MissionMapper;
 import cloudfleet.cloudfleet.Model.*;
 import cloudfleet.cloudfleet.Repository.DispatcherRepository;
@@ -23,6 +24,7 @@ public class MissionService {
 
     private static final List<MissionStatus> ACTIVE =
             List.of(MissionStatus.PLANNED, MissionStatus.IN_PROGRESS);
+    private static final Long NEW_MISSION = -1L;
 
     private final MissionRepository missionRepository;
     private final MissionMapper missionMapper;
@@ -38,7 +40,7 @@ public class MissionService {
 
        Vehicule vehicule = getVehicule(dto.vehiculeId());
        Driver driver = getDriver(dto.driverId());
-       checkAvailability(vehicule,driver,dto.dateDebut(),dto.dateFin());
+       checkAvailability(vehicule,driver,dto.dateDebut(),dto.dateFin() , NEW_MISSION);
 
        Mission mission = missionMapper.toEntity(dto);
        mission.setVehicule(vehicule);
@@ -78,7 +80,7 @@ public class MissionService {
             throw new IllegalStateException("Le véhicule n'est pas disponible pour démarrer la mission");
         }
         mission.setStatus(MissionStatus.IN_PROGRESS);
-        mission.setDateDebut(LocalDateTime.now());
+        mission.setActualDateDebut(LocalDateTime.now());
         mission.getVehicule().setStatus(VehicleStatus.UNAVAILABLE);
         mission.getDriver().setStatus(DriverStatus.ON_DELIVERY);
         return missionMapper.toDto(mission);
@@ -91,13 +93,14 @@ public class MissionService {
         CheckAcces(mission,currentuser);
         requireStatus(mission , MissionStatus.IN_PROGRESS , "terminée");
 
-        mission.setDateFin(LocalDateTime.now());
+        mission.setActualDateFin(LocalDateTime.now());
         mission.setStatus(MissionStatus.COMPLETED);
         mission.getVehicule().setStatus(VehicleStatus.AVAILABLE);
         mission.getDriver().setStatus(DriverStatus.AVAILABLE);
         return missionMapper.toDto(mission);
     }
 
+    @Transactional
     public MissionDTO cancelMission(Long id  ){
         Mission mission = getMission(id);
         requireStatus(mission , MissionStatus.PLANNED , "annulée");
@@ -107,16 +110,22 @@ public class MissionService {
     }
 
     @Transactional
-    public MissionDTO updateMission(Long id, CreatMissionDTO dto) {
+    public MissionDTO updateMission(Long id, UpdateMissionDTO dto) {
         Mission mission = getMission(id);
-        mission.setDateDebut(dto.dateDebut());
-        mission.setDateFin(dto.dateFin());
-        mission.setDepartAdresse(dto.departAdresse());
-        mission.setDestinationAdresse(dto.destinationAdresse());
-        mission.setVehicule(getVehicule(dto.vehiculeId()));
-        mission.setDriver(getDriver(dto.driverId()));
+        requireStatus(mission, MissionStatus.PLANNED, "modifiée");
 
-        return missionMapper.toDto(missionRepository.save(mission));
+        if (!dto.dateFin().isAfter(dto.dateDebut())) {
+            throw new IllegalStateException("La date de fin doit être après la date de début");
+        }
+
+        Vehicule vehicule = getVehicule(dto.vehiculeId());
+        Driver driver = getDriver(dto.driverId());
+        checkAvailability(vehicule, driver, dto.dateDebut(), dto.dateFin() , mission.getId());
+
+        missionMapper.updateEntity(dto, mission);
+        mission.setVehicule(vehicule);
+        mission.setDriver(driver);
+        return missionMapper.toDto(mission);
     }
 
     @Transactional
@@ -128,17 +137,17 @@ public class MissionService {
         missionRepository.delete(mission);
     }
 
-    private void checkAvailability(Vehicule v, Driver d, LocalDateTime debut, LocalDateTime fin) {
+    private void checkAvailability(Vehicule v, Driver d, LocalDateTime debut, LocalDateTime fin , Long excludeId) {
         if (v.getStatus() == VehicleStatus.IN_MAINTENANCE) { // adaptez à votre enum
             throw new IllegalStateException("Ce véhicule n'est pas disponible");
         }
         if (!d.isEnabled()) {
             throw new IllegalStateException("Ce chauffeur est désactivé");
         }
-        if (missionRepository.existsVehiculeOverlap(v.getId(), ACTIVE, debut, fin)) {
+        if (missionRepository.existsVehiculeOverlap(v.getId(),excludeId , ACTIVE, debut, fin)) {
             throw new IllegalStateException("Ce véhicule a déjà une mission sur cette période");
         }
-        if (missionRepository.existsDriverOverlap(d.getId(), ACTIVE, debut, fin)) {
+        if (missionRepository.existsDriverOverlap(d.getId(), excludeId ,ACTIVE, debut, fin)) {
             throw new IllegalStateException("Ce chauffeur a déjà une mission sur cette période");
         }
     }

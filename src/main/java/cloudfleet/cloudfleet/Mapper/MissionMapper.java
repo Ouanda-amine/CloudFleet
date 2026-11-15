@@ -2,9 +2,11 @@ package cloudfleet.cloudfleet.Mapper;
 
 import cloudfleet.cloudfleet.DTO.CreatMissionDTO;
 import cloudfleet.cloudfleet.DTO.MissionDTO;
+import cloudfleet.cloudfleet.DTO.UpdateMissionDTO;
 import cloudfleet.cloudfleet.Model.Mission;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.MappingTarget;
 
 @Mapper(componentModel = "spring")
 public interface MissionMapper {
@@ -27,4 +29,13 @@ public interface MissionMapper {
     @Mapping(target = "driver", ignore = true)
     @Mapping(target = "dispatcher", ignore = true)
     Mission toEntity(CreatMissionDTO dto);
+
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "status", ignore = true)
+    @Mapping(target = "actualDateDebut", ignore = true)
+    @Mapping(target = "actualDateFin", ignore = true)
+    @Mapping(target = "vehicule", ignore = true)
+    @Mapping(target = "driver", ignore = true)
+    @Mapping(target = "dispatcher", ignore = true)
+    void updateEntity(UpdateMissionDTO dto, @MappingTarget Mission mission);
 }
