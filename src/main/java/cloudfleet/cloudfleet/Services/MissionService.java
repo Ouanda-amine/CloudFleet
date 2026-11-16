@@ -56,10 +56,12 @@ public class MissionService {
     }
 
     @Transactional(readOnly = true)
-    public List<MissionDTO> getAllMissions() {
-        return missionRepository.findAll().stream()
-                .map(missionMapper::toDto)
-                .toList();
+    public List<MissionDTO> getAllMissions(User currentuser) {
+       List<Mission> missions = (currentuser instanceof Driver)
+               ? missionRepository.findByDriverId(currentuser.getId())
+               : missionRepository.findAll();
+       return missionMapper.toDTOLIST(missions);
+
     }
 
     @Transactional(readOnly = true)

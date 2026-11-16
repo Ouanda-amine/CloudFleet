@@ -8,6 +8,8 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 
+import java.util.List;
+
 @Mapper(componentModel = "spring")
 public interface MissionMapper {
 
@@ -20,6 +22,8 @@ public interface MissionMapper {
     @Mapping(target = "driverFullName",
             expression = "java(mission.getDriver() == null ? null : mission.getDriver().getFirstName() + \" \" + mission.getDriver().getLastName())")
     MissionDTO toDto(Mission mission);
+
+    List<MissionDTO> toDTOLIST(List<Mission> missions);
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "status", ignore = true)
