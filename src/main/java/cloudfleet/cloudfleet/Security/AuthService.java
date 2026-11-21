@@ -20,6 +20,6 @@ public class AuthService {
 
         User user = (User) auth.getPrincipal();
         String token = jwtService.generateToken(user);
-        return new AuthResponseDTO(token, user.getEmail(), user.getRole().name());
+        return new AuthResponseDTO(token, user.getId(), user.getEmail(), user.getRole().name());
     }
 }

@@ -81,6 +81,9 @@ public class MissionService {
         if(mission.getVehicule().getStatus() != VehicleStatus.AVAILABLE){
             throw new IllegalStateException("Le véhicule n'est pas disponible pour démarrer la mission");
         }
+        if (mission.getDriver().getStatus() != DriverStatus.AVAILABLE){
+            throw new IllegalStateException("Le chauffeur n'est pas disponible pour démarrer la mission");
+        }
         mission.setStatus(MissionStatus.IN_PROGRESS);
         mission.setActualDateDebut(LocalDateTime.now());
         mission.getVehicule().setStatus(VehicleStatus.UNAVAILABLE);
