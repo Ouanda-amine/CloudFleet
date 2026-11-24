@@ -139,6 +139,9 @@ public class MissionService {
         if(mission.getStatus()==MissionStatus.IN_PROGRESS){
             throw new IllegalStateException("Cannot delete a mission that is in progress");
         }
+        if(mission.getStatus()==MissionStatus.COMPLETED){
+            throw new IllegalStateException("Cannot delete a mission that is completed");
+        }
         missionRepository.delete(mission);
     }
 
